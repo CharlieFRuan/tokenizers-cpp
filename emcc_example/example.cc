@@ -8,7 +8,10 @@
 #include <emscripten.h>
 #include <emscripten/bind.h>
 
+
 using tokenizers::Tokenizer;
+
+// A LIBRARY THAT EXPOSES HuggingFaceTokenizerExample()
 
 std::string LoadBytesFromFile(const std::string& path) {
   EM_ASM(
@@ -65,30 +68,9 @@ void TestTokenizer(std::unique_ptr<Tokenizer> tok, bool print_vocab = false,
   std::cout << std::endl;
 }
 
-// Sentencepiece tokenizer
-// - dist/tokenizer.model
-void SentencePieceTokenizerExample() {
-  std::cout << "Tokenizer: SentencePiece" << std::endl;
-
-  auto start = std::chrono::high_resolution_clock::now();
-
-  // Read blob from file.
-  auto blob = LoadBytesFromFile("dist/tokenizer.model");
-  // Note: all the current factory APIs takes in-memory blob as input.
-  // This gives some flexibility on how these blobs can be read.
-  auto tok = Tokenizer::FromBlobSentencePiece(blob);
-
-  auto end = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-
-  std::cout << "Load time: " << duration << " ms" << std::endl;
-
-  TestTokenizer(std::move(tok), false, true);
-}
-
 // HF tokenizer
 // - dist/tokenizer.json
-void HuggingFaceTokenizerExample() {
+EMSCRIPTEN_KEEPALIVE void HuggingFaceTokenizerExample() {
   std::cout << "Tokenizer: Huggingface" << std::endl;
 
   auto start = std::chrono::high_resolution_clock::now();
@@ -105,28 +87,4 @@ void HuggingFaceTokenizerExample() {
   std::cout << "Load time: " << duration << " ms" << std::endl;
 
   TestTokenizer(std::move(tok), false, true);
-}
-
-// RWKV world tokenizer
-// - dist/tokenizer_model
-void RWKVWorldTokenizerExample() {
-  std::cout << "Tokenizer: RWKVWorld" << std::endl;
-
-  auto start = std::chrono::high_resolution_clock::now();
-
-  auto tok = Tokenizer::FromBlobRWKVWorld("dist/tokenizer_model");
-
-  auto end = std::chrono::high_resolution_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-
-  std::cout << "Load time: " << duration << " ms" << std::endl;
-
-  // We cannot check id back for RWKVWorldTokenizer yet.
-  TestTokenizer(std::move(tok), false, false);
-}
-
-int main(int argc, char* argv[]) {
-  SentencePieceTokenizerExample();
-  HuggingFaceTokenizerExample();
-  // RWKVWorldTokenizerExample();
 }
